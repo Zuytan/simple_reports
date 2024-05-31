@@ -1,0 +1,12 @@
+[package]
+name = "delivery_note_generator"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+eframe = "0.27.2"
+egui = "0.27.2"
+pdf-canvas = "0.7.0"
+printpdf = { version = "0.7.0", features = ["embedded_images"] }
