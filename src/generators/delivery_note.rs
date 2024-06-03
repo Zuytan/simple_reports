@@ -7,20 +7,15 @@ use std::fs::File;
 
 use super::Report;
 
-pub struct DeliveryNote<'a> {
+pub struct DeliveryNote {
     sender: Sender,
     client: Client,
-    items: Vec<Item<'a>>,
+    items: Vec<Item>,
     logo_path: Option<String>,
 }
 
-impl<'a> DeliveryNote<'a> {
-    pub fn new(
-        sender: Sender,
-        client: Client,
-        items: &[Item<'a>],
-        logo_path: Option<String>,
-    ) -> Self {
+impl DeliveryNote {
+    pub fn new(sender: Sender, client: Client, items: &[Item], logo_path: Option<String>) -> Self {
         return Self {
             sender,
             client,
@@ -30,7 +25,7 @@ impl<'a> DeliveryNote<'a> {
     }
 }
 
-impl<'a> Report for DeliveryNote<'a> {
+impl Report for DeliveryNote {
     fn generate(&self) -> PdfDocumentReference {
         let (doc, page1, layer1) =
             PdfDocument::new("Bon de Livraison", Mm(210.0), Mm(297.0), "Layer 1");

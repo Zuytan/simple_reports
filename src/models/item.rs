@@ -1,27 +1,33 @@
 use super::product::Product;
 
 #[derive(Clone, Default)]
-pub struct Item<'a> {
-    product: &'a Product,
-    price: f64,
-    quantity: u64,
+pub struct Item {
+    product: Product,
+    price: String,
+    quantity: String,
 }
 
-impl<'a> Item<'a> {
-    pub fn new(product: &'a Product, price: f64, quantity: u64) -> Self {
+impl Item {
+    pub fn new(product: Product, price: String, quantity: String) -> Self {
         return Self {
             product,
             price,
             quantity,
         };
     }
-    pub fn product(&self) -> &'a Product {
-        return self.product;
+    pub fn product(&self) -> &Product {
+        return &self.product;
     }
-    pub fn price(&self) -> &f64 {
+    pub fn product_mut(&mut self) -> &mut Product {
+        return &mut self.product;
+    }
+    pub fn price(&self) -> &String {
         return &self.price;
     }
-    pub fn quantity(&self) -> &u64 {
+    pub fn quantity(&self) -> &String {
         return &self.quantity;
+    }
+    pub fn quantity_mut(&mut self) -> &mut String {
+        return &mut self.quantity;
     }
 }

@@ -41,6 +41,14 @@ impl Engine {
         self.clients.push(client);
     }
 
+    pub fn save(&mut self) {
+        for client in &self.clients {
+            self.storage.build().save(client);
+        }
+        for product in &self.products {
+            self.storage.build().save(product);
+        }
+    }
     pub fn generate_report(&self, report: impl Report) {
         let pdf = report.generate();
         let mut buffer = BufWriter::new(File::create("report").unwrap());

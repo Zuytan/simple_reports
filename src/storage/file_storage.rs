@@ -28,7 +28,7 @@ impl Storage for FileStorage {
         }
     }
 
-    fn save<S: super::Savable>(&self, savable: S) -> Result<(), String> {
+    fn save<S: super::Savable>(&self, savable: &S) -> Result<(), String> {
         let fields = savable.to_fields();
         if fields.is_empty() {
             return Err("Fields are empty".to_string());
@@ -149,7 +149,7 @@ impl Storage for FileStorage {
         let path = Path::new(&file_path_str);
 
         if !path.exists() {
-            return Err("File does not exist".to_string());
+            return Ok(Vec::new());
         }
 
         let file = match File::open(&path) {
@@ -267,7 +267,7 @@ mod tests {
             name: "Alice".to_string(),
         };
 
-        assert!(storage.save(user).is_ok());
+        assert!(storage.save(&user).is_ok());
 
         let loaded_users = storage.load::<User>().unwrap();
         assert_eq!(loaded_users.len(), 1);
@@ -294,8 +294,8 @@ mod tests {
             name: "Bob".to_string(),
         };
 
-        assert!(storage.save(user1).is_ok());
-        assert!(storage.save(user2).is_ok());
+        assert!(storage.save(&user1).is_ok());
+        assert!(storage.save(&user2).is_ok());
 
         let loaded_users = storage.load::<User>().unwrap();
         assert_eq!(loaded_users.len(), 1);
@@ -322,8 +322,8 @@ mod tests {
             name: "Bob".to_string(),
         };
 
-        assert!(storage.save(user1).is_ok());
-        assert!(storage.save(user2).is_ok());
+        assert!(storage.save(&user1).is_ok());
+        assert!(storage.save(&user2).is_ok());
 
         let loaded_users = storage.load::<User>().unwrap();
         assert_eq!(loaded_users.len(), 2);

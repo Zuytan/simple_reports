@@ -27,6 +27,6 @@ impl StorageType {
 }
 pub trait Storage {
     fn init(&self) -> Result<(), String>;
-    fn save<S: Savable>(&self, savable: S) -> Result<(), String>;
+    fn save<S: Savable>(&self, savable: &S) -> Result<(), String>;
     fn load<S: Savable>(&self) -> Result<Vec<S>, String>;
 }

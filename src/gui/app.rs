@@ -4,7 +4,9 @@ use std::sync::{Arc, Mutex};
 
 use crate::{
     engine::Engine,
+    generators::delivery_note::DeliveryNote,
     models::{client::Client, item::Item, product::Product},
+    Sender,
 };
 
 #[derive(PartialEq)]
@@ -13,21 +15,23 @@ enum Tab {
     CreateClient,
     GenerateDeliveryNote,
 }
-pub struct MyApp<'a> {
+pub struct MyApp {
     tab: Tab,
     engine: Arc<Mutex<Engine>>,
     client: Arc<Mutex<Client>>,
     product: Arc<Mutex<Product>>,
-    selected_items: Vec<Option<Item<'a>>>,
+    selected_client: Client,
+    selected_items: Vec<Item>,
 }
 
-impl<'a> MyApp<'a> {
+impl MyApp {
     pub fn new(engine: Arc<Mutex<Engine>>) -> Self {
         return Self {
             tab: Tab::GenerateDeliveryNote,
             engine,
             client: Arc::new(Mutex::new(Client::default())),
             product: Arc::new(Mutex::new(Product::default())),
+            selected_client: Client::default(),
             selected_items: Vec::new(),
         };
     }
@@ -95,31 +99,70 @@ impl<'a> MyApp<'a> {
         ui.heading("Créer un Rapport");
 
         let mut engine = self.engine.lock().unwrap();
+        let clients = engine.get_clients();
         let products = engine.get_products();
 
-        ui.label("Select Products:");
-        for item in self.selected_items {
-            ui.horizontal(|ui| {
-                egui::ComboBox::from_id_source(format!("product_{}", item.product().id()))
-                    .selected_text(item.product().description())
-                    .show_ui(ui, |ui| {
-                        for (index, product) in products.iter().enumerate() {
-                            ui.selectable_value(
-                                &mut item.product(),
-                                &item.product(),
-                                product.description(),
-                            );
-                        }
-                    });
-                if ui.button("+").clicked() {
-                    self.selected_items.push(Item::default());
-                }
-                if ui.button("-").clicked() {
-                    if self.selected_products.len() > 1 {
-                        self.selected_products.remove(i);
+        ui.vertical(|ui| {
+            ui.label("Selectionner un client:");
+            egui::ComboBox::from_id_source(format!("client"))
+                .selected_text(self.selected_client.name.clone())
+                .show_ui(ui, |ui| {
+                    for client in clients.iter() {
+                        ui.selectable_value(
+                            &mut self.selected_client,
+                            client.clone(),
+                            client.name.clone(),
+                        );
                     }
-                }
+                });
+        });
+        ui.label("Ajouter des produits:");
+        for (idx, item) in self.selected_items.iter_mut().enumerate() {
+            ui.horizontal(|ui| {
+                ui.vertical(|ui| {
+                    ui.label("Selectionner un produit:");
+                    egui::ComboBox::from_id_source(format!("item_{}", idx))
+                        .selected_text(item.product().description())
+                        .show_ui(ui, |ui| {
+                            for product in products.iter() {
+                                ui.selectable_value(
+                                    item.product_mut(),
+                                    product.clone(),
+                                    product.description(),
+                                );
+                            }
+                        });
+                });
+                ui.vertical(|ui| {
+                    ui.label("Selectionner une quantité:");
+                    ui.text_edit_singleline(item.quantity_mut());
+                })
             });
+        }
+        ui.horizontal(|ui| {
+            if ui.button("+").clicked() {
+                self.selected_items.push(Item::default());
+            }
+            if ui.button("-").clicked() {
+                if self.selected_items.len() > 1 {
+                    self.selected_items.pop();
+                }
+            }
+        });
+        if ui.button("Générer un bon").clicked() {
+            let report = DeliveryNote::new(
+                Sender {
+                    name: "Alexandre".to_string(),
+                    addr1: "43 rue Courtalon".to_string(),
+                    addr2: "Appartement A102B".to_string(),
+                    postal_code: 10000,
+                    city: "Troyes".to_string(),
+                },
+                self.selected_client.clone(),
+                &self.selected_items,
+                Some("assets/consitainerLogo.png".to_string()),
+            );
+            engine.generate_report(report)
         }
     }
 }
@@ -146,5 +189,8 @@ impl App for MyApp {
             Tab::GenerateDeliveryNote => self.show_generate_report(ui),
         });
     }
-    fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {}
+    fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
+        let mut engine = self.engine.lock().unwrap();
+        engine.save();
+    }
 }
